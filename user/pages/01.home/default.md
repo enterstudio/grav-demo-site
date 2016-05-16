@@ -20,7 +20,7 @@ Congratulations! You have installed the **Base Grav Package** that provides a **
 To edit this page, you can either use the already installed [Admin Panel](../../admin) plugin (accessed by adding '/admin/ to the URL of your **Grav** site) or work with files directly using a text editor of choice such as [Atom.io](http://atom.io) or [Adobe Brackets](http://brackets.io).
 
 **Admin Panel**  
-![Image of Grav Admin Panel](admin-panel.png?resize=600,400)  
+![Image of Grav Admin Panel](admin-panel-pages.png?resize=600,400)  
 Press on the **'[Pages](../../admin/pages)'** button on the left-hand toolbar and then choose the **'[Home](../../admin/pages/home)'** page.
 
 **Working with Files**  
