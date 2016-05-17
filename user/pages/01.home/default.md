@@ -5,9 +5,9 @@ title: Home
 # Grav is Running!
 ## You have installed **Grav** successfully
 
-Congratulations! You have installed the **Base Grav Package** that provides a **simple page** and the default **Antimatter** theme to get you started.
+Congratulations! You have installed the **Grav Workshop Demo Site** that provides a **simple page** and the default **Antimatter** theme to get you started.
 
->>> If you want a more **full-featured** base install, you should check out [**Skeleton** packages available for download](http://getgrav.org/downloads).
+>>> If you want a more **full-featured** base install, you should check out other [**Skeleton** packages available for download](http://getgrav.org/downloads).
 
 ### Find out all about Grav
 
@@ -33,7 +33,7 @@ In the **'[Pages](../../admin/pages)'** panel press the **'Add Page'** button an
 
 **Working with Files**  
 1. Navigate to your pages folder: `user/pages/` and create a new folder.  In this example, we will use [explicit default ordering](http://learn.getgrav.org/content/content-pages) and call the folder `02.mypage`.
-2. Launch your text editor and paste in the following sample code:
+2. Launch your text editor and paste in the following:
 
         ---
         title: My New Page
@@ -49,10 +49,11 @@ In the **'[Pages](../../admin/pages)'** panel press the **'Add Page'** button an
 
 ### Working with Media
 
-**Grav** has a lot of built-in media capabilities, with even more capabilities accessed by using available plugins.
+**Grav** has a lot of built-in media capabilities, with even more capabilities available by using available plugins.
 
-For example, to display a clickable thumbnail which can be pressed on to view the image at full size, the following code can be used:
+For example, to display a clickable thumbnail which can be pressed on to view the image at full size use the following:
 
-        ![Sample Image](sample-image.jpg?lightbox=600,400&resize=200,200)
+        ![Sample Image](sample-image.jpg?lightbox=533,400&resize=266,200)
 
+Click on the below image to see the result:   
 ![Sample Image](sample-image.jpg?lightbox=600,400&resize=200,200)
