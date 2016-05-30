@@ -183,7 +183,7 @@ class Controller
 
         if (!$user || !$user->exists()) {
             $messages->add($language->translate(['PLUGIN_LOGIN.FORGOT_USERNAME_DOES_NOT_EXIST', $username]), 'error');
-            $this->setRedirect('/forgot');
+            $this->setRedirect($this->grav['config']->get('plugins.login.route_forgot'));
 
             return true;
         }
@@ -191,7 +191,7 @@ class Controller
         if (empty($user->email)) {
             $messages->add($language->translate(['PLUGIN_LOGIN.FORGOT_CANNOT_RESET_EMAIL_NO_EMAIL', $username]),
                 'error');
-            $this->setRedirect('/forgot');
+            $this->setRedirect($this->grav['config']->get('plugins.login.route_forgot'));
 
             return true;
         }
@@ -212,7 +212,7 @@ class Controller
 
         if (empty($from)) {
             $messages->add($language->translate('PLUGIN_LOGIN.FORGOT_EMAIL_NOT_CONFIGURED'), 'error');
-            $this->setRedirect('/forgot');
+            $this->setRedirect($this->grav['config']->get('plugins.login.route_forgot'));
 
             return true;
         }
@@ -405,7 +405,8 @@ class Controller
 
             // Hardening cookies with user-agent and random salt or
             // fallback to use system based cache key
-            $data = $_SERVER['HTTP_USER_AGENT'] . $config->get('security.salt', $this->grav['cache']->getKey());
+            $server_agent = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : 'unknown';
+            $data = $server_agent . $config->get('security.salt', $this->grav['cache']->getKey());
             $this->rememberMe->setSalt(hash('sha512', $data));
 
             // Set cookie with correct base path of Grav install

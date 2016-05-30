@@ -13,15 +13,19 @@ use RocketTheme\Toolbox\Event\Event;
 class Form extends Iterator
 {
     /**
-     * @var Grav $grav
-     */
-    protected $grav;
-
-    /**
      * @var string
      */
     public $message;
 
+    /**
+     * @var string
+     */
+    public $message_color;
+    
+    /**
+     * @var Grav $grav
+     */
+    protected $grav;
     /**
      * @var array
      */
@@ -70,10 +74,10 @@ class Form extends Iterator
         $this->grav = Grav::instance();
         $this->page = $page;
 
-        $header = $page->header();
-        $this->rules = isset($header->rules) ? $header->rules : [];
+        $header            = $page->header();
+        $this->rules       = isset($header->rules) ? $header->rules : [];
         $this->header_data = isset($header->data) ? $header->data : [];
-        $this->items = $header->form;
+        $this->items       = $header->form;
 
         // Set form name if not set.
         if (empty($this->items['name'])) {
@@ -86,6 +90,11 @@ class Form extends Iterator
         $this->grav->fireEvent('onFormInitialized', new Event(['form' => $this]));
     }
 
+    public function setFields($fields)
+    {
+        $this->fields = $fields;
+    }
+
     /**
      * Reset data.
      */
@@ -95,16 +104,42 @@ class Form extends Iterator
 
         // Fix naming for fields (presently only for toplevel fields)
         foreach ($this->items['fields'] as $key => $field) {
+            // default to text if not set
+            if (!isset($field['type'])) {
+                $field['type'] = 'text';
+            }
+
+            $types = Grav::instance()['plugins']->formFieldTypes;
+
+            // manually merging the field types
+            if (key_exists($field['type'], $types)) {
+                $field += $types[$field['type']];
+            }
+
+            // BC for old style of array style field definitions
             if (is_numeric($key) && isset($field['name'])) {
                 unset($this->items['fields'][$key]);
-
                 $key = $field['name'];
-                $this->items['fields'][$key] = $field;
             }
+
+            // Add name based on key if not already set
+            if (!isset($field['name'])) {
+                $field['name'] = $key;
+            }
+
+            // set any modifications back on the fields array
+            $this->items['fields'][$key] = $field;
+
         }
 
-        $blueprint = new Blueprint($name, ['form' => $this->items, 'rules' => $this->rules]);
-        $this->data = new Data($this->header_data, $blueprint);
+        $blueprint    = new Blueprint($name, ['form' => $this->items, 'rules' => $this->rules]);
+        // init the form to process directives
+        $blueprint->load()->init();
+
+        // fields set to processed blueprint fields
+        $this->fields = $blueprint->fields();
+        
+        $this->data   = new Data($this->header_data, $blueprint);
         $this->values = new Data();
     }
 
@@ -158,6 +193,17 @@ class Form extends Iterator
     }
 
     /**
+     * Get a value from the form
+     *
+     * @param $name
+     * @return mixed
+     */
+    public function getValue($name)
+    {
+        return $this->values->get($name);
+    }
+
+    /**
      * Set value of given variable in the data array
      *
      * @param string $name
@@ -181,8 +227,8 @@ class Form extends Iterator
         $files = [];
         if (isset($_POST)) {
             $this->values = new Data(isset($_POST) ? (array)$_POST : []);
-            $data = $this->values->get('data');
-            $files = (array)$_FILES;
+            $data         = $this->values->get('data');
+            $files        = (array)$_FILES;
 
             if (method_exists('Grav\Common\Utils', 'getNonce')) {
                 if (!$this->values->get('form-nonce') || !Utils::verifyNonce($this->values->get('form-nonce'), 'form')) {
@@ -195,11 +241,19 @@ class Form extends Iterator
                 }
             }
 
-            foreach ($this->items['fields'] as $field) {
-                $name = $field['name'];
+            $i = 0;
+            foreach ($this->items['fields'] as $key => $field) {
+                $name = isset($field['name']) ? $field['name'] : $key;
+                if (!isset($field['name'])) {
+                    if (isset($data[$i])) { //Handle input@ false fields
+                        $data[$name] = $data[$i];
+                        unset($data[$i]);
+                    }
+                }
                 if ($field['type'] == 'checkbox') {
                     $data[$name] = isset($data[$name]) ? true : false;
                 }
+                $i++;
             }
 
             // Add post data to form dataset
@@ -216,10 +270,11 @@ class Form extends Iterator
             $this->data->validate();
             $this->data->filter();
 
-            foreach ($files as $key => $file) {
-                $cleanFiles = $this->cleanFilesData($key, $file);
-                if ($cleanFiles) {
-                    $this->data->set($key, $cleanFiles);
+            if (isset($files['data'])) {
+                $cleanFiles = $this->cleanFilesData($files['data']);
+
+                foreach ($cleanFiles as $key => $data) {
+                    $this->data->set($key, $data);
                 }
             }
 
@@ -238,11 +293,11 @@ class Form extends Iterator
             foreach ($process as $action => $data) {
                 if (is_numeric($action)) {
                     $action = \key($data);
-                    $data = $data[$action];
+                    $data   = $data[$action];
                 }
 
                 $previousEvent = $event;
-                $event = new Event(['form' => $this, 'action' => $action, 'params' => $data]);
+                $event         = new Event(['form' => $this, 'action' => $action, 'params' => $data]);
 
                 if ($previousEvent) {
                     if (!$previousEvent->isPropagationStopped()) {
@@ -259,69 +314,82 @@ class Form extends Iterator
         }
     }
 
-    private function cleanFilesData($key, $file)
+    private function cleanFilesData($file)
     {
-        $config = $this->grav['config'];
-        $default = $config->get('plugins.form.files');
-        $settings = isset($this->items['fields'][$key]) ? $this->items['fields'][$key] : [];
-
         /** @var Page $page */
-        $page = null;
-        $blueprint = array_replace($default, $settings);
+        $page       = null;
+        $cleanFiles = [];
+        $config     = $this->grav['config'];
+        $default    = $config->get('plugins.form.files');
 
-        $cleanFiles[$key] = [];
-        if (!isset($blueprint)) {
-            return false;
-        }
+        foreach ((array)$file['error'] as $index => $errors) {
+            $errors = !is_array($errors) ? [$errors] : $errors;
 
-        $cleanFiles = [$key => []];
-        foreach ((array)$file['error'] as $index => $error) {
-            if ($error == UPLOAD_ERR_OK) {
-                $tmp_name = $file['tmp_name'][$index];
-                $name = $file['name'][$index];
-                $type = $file['type'][$index];
-                $destination = Folder::getRelativePath(rtrim($blueprint['destination'], '/'));
+            foreach ($errors as $multiple_index => $error) {
+                if ($error == UPLOAD_ERR_OK) {
+                    if (is_array($file['name'][$index])) {
+                        $tmp_name = $file['tmp_name'][$index][$multiple_index];
+                        $name     = $file['name'][$index][$multiple_index];
+                        $type     = $file['type'][$index][$multiple_index];
+                        $size     = $file['size'][$index][$multiple_index];
+                    } else {
+                        $tmp_name = $file['tmp_name'][$index];
+                        $name     = $file['name'][$index];
+                        $type     = $file['type'][$index];
+                        $size     = $file['size'][$index];
+                    }
+                    $settings    = isset($this->items['fields'][$index]) ? $this->items['fields'][$index] : [];
+                    $blueprint   = array_replace($default, $settings);
+                    $destination = Folder::getRelativePath(rtrim($blueprint['destination'], '/'));
+                    $page        = null;
 
-                if (!$this->match_in_array($type, $blueprint['accept'])) {
-                    throw new \RuntimeException('File "' . $name . '" is not an accepted MIME type.');
-                }
-
-                if (Utils::startsWith($destination, '@page:')) {
-                    $parts = explode(':', $destination);
-                    $route = $parts[1];
-                    $page = $this->grav['page']->find($route);
-
-                    if (!$page) {
-                        throw new \RuntimeException('Unable to upload file to destination. Page route not found.');
+                    if (!isset($blueprint)) {
+                        return false;
                     }
 
-                    $destination = $page->relativePagePath();
-                } else {
-                    if ($destination == '@self') {
-                        $page = $this->grav['page'];
+                    if (!$this->match_in_array($type, $blueprint['accept'])) {
+                        throw new \RuntimeException('File "' . $name . '" is not an accepted MIME type.');
+                    }
+
+                    if (Utils::startsWith($destination, '@page:')) {
+                        $parts = explode(':', $destination);
+                        $route = $parts[1];
+                        $page  = $this->grav['page']->find($route);
+
+                        if (!$page) {
+                            throw new \RuntimeException('Unable to upload file to destination. Page route not found.');
+                        }
+
                         $destination = $page->relativePagePath();
                     } else {
-                        Folder::mkdir($destination);
+                        if ($destination == '@self') {
+                            $page        = $this->grav['page'];
+                            $destination = $page->relativePagePath();
+                        } else {
+                            Folder::mkdir($destination);
+                        }
                     }
-                }
 
-                if (move_uploaded_file($tmp_name, "$destination/$name")) {
-                    $path = $page ? $this->grav['uri']->convertUrl($page,
-                        $page->route() . '/' . $name) : $destination . '/' . $name;
-                    $cleanFiles[$key][$path] = [
-                        'name'  => $file['name'][$index],
-                        'type'  => $file['type'][$index],
-                        'size'  => $file['size'][$index],
-                        'file'  => $destination . '/' . $name,
-                        'route' => $page ? $path : null
-                    ];
-                } else {
-                    throw new \RuntimeException("Unable to upload file(s) to $destination/$name");
+                    if (move_uploaded_file($tmp_name, "$destination/$name")) {
+                        $path     = $page ? $this->grav['uri']->convertUrl($page, $page->route() . '/' . $name) : $destination . '/' . $name;
+                        $fileData = [
+                            'name'  => $name,
+                            'path'  => $path,
+                            'type'  => $type,
+                            'size'  => $size,
+                            'file'  => $destination . '/' . $name,
+                            'route' => $page ? $path : null
+                        ];
+
+                        $cleanFiles[$index][$path] = $fileData;
+                    } else {
+                        throw new \RuntimeException("Unable to upload file(s) to $destination/$name");
+                    }
                 }
             }
         }
 
-        return $cleanFiles[$key];
+        return $cleanFiles;
     }
 
     private function match_in_array($needle, $haystack)

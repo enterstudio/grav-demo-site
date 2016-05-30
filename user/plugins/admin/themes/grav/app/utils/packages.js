@@ -10,6 +10,7 @@ class Packages {
     }
 
     static addDependencyToList(type, dependency, slug = '') {
+        if (['admin', 'form', 'login', 'email'].indexOf(dependency) !== -1) { return; }
         let container = $('.package-dependencies-container');
         let text = `${dependency} <a href="#" class="button" data-dependency-slug="${dependency}" data-${type}-action="remove-dependency-package">Remove</a>`;
 
@@ -22,7 +23,7 @@ class Packages {
 
     addDependenciesToList(dependencies, slug = '') {
         dependencies.forEach((dependency) => {
-            Packages.addDependencyToList('plugin', dependency, slug);
+            Packages.addDependencyToList('plugin', dependency.name || dependency, slug);
         });
     }
 
@@ -64,9 +65,9 @@ class Packages {
                 if (response.dependencies && response.dependencies.length > 0) {
                     this.addDependenciesToList(response.dependencies);
                     $('.remove-package-dependencies').removeClass('hidden');
-                } else {
-                    $('.remove-package-done').removeClass('hidden');
                 }
+
+                $('.remove-package-done').removeClass('hidden');
 
                 // The package was removed. When the modal closes, move to the packages list
                 $(document).on('closing', '[data-remodal-id="remove-package"]', () => {
@@ -99,27 +100,31 @@ class Packages {
         });
     }
 
-    static addNeededDependencyToList(type, slug) {
-        $('.install-dependencies-package-container .type-' + type).removeClass('hidden');
-        let list = $('.install-dependencies-package-container .type-' + type + ' ul');
+    static addNeededDependencyToList(action, slug) {
+        $('.install-dependencies-package-container .type-' + action).removeClass('hidden');
+        let list = $('.install-dependencies-package-container .type-' + action + ' ul');
 
-        let current_version = '';
-        let available_version = '';
-        let name = '';
+        if (action !== 'install') {
+            let current_version = '';
+            let available_version = '';
+            let name = '';
 
-        let resources = gpm.payload.payload.resources;
+            let resources = gpm.payload.payload.resources;
 
-        if (resources.plugins[slug]) {
-            available_version = resources.plugins[slug].available;
-            current_version = resources.plugins[slug].version;
-            name = resources.plugins[slug].name;
-        } else if (resources.themes[slug]) {
-            available_version = resources.themes[slug].available;
-            current_version = resources.themes[slug].version;
-            name = resources.themes[slug].name;
+            if (resources.plugins[slug]) {
+                available_version = resources.plugins[slug].available;
+                current_version = resources.plugins[slug].version;
+                name = resources.plugins[slug].name;
+            } else if (resources.themes[slug]) {
+                available_version = resources.themes[slug].available;
+                current_version = resources.themes[slug].version;
+                name = resources.themes[slug].name;
+            }
+
+            list.append(`<li>${name ? name : slug}, from v<strong>${current_version}</strong> to v<strong>${available_version}</strong></li>`);
+        } else {
+            list.append(`<li>${name ? name : slug}</li>`);
         }
-
-        list.append(`<li>${name ? name : slug}, from v<strong>${current_version}</strong> to v<strong>${available_version}</strong></li>`);
     }
 
     getPackagesDependencies(type, slugs, finishedLoadingCallback) {
@@ -144,9 +149,9 @@ class Packages {
                             }
                             hasDependencies = true;
                             let dependencyName = dependency;
-                            let dependencyType = response.dependencies[dependency];
+                            let action = response.dependencies[dependency];
 
-                            Packages.addNeededDependencyToList(dependencyType, dependencyName);
+                            Packages.addNeededDependencyToList(action, dependencyName);
                         }
                     }
 

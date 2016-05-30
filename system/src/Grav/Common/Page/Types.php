@@ -2,11 +2,13 @@
 namespace Grav\Common\Page;
 
 use Grav\Common\Filesystem\Folder;
+use Grav\Common\Grav;
 use RocketTheme\Toolbox\ArrayTraits\ArrayAccess;
 use RocketTheme\Toolbox\ArrayTraits\Constructor;
 use RocketTheme\Toolbox\ArrayTraits\Countable;
 use RocketTheme\Toolbox\ArrayTraits\Export;
 use RocketTheme\Toolbox\ArrayTraits\Iterator;
+use RocketTheme\Toolbox\ResourceLocator\UniformResourceLocator;
 
 class Types implements \ArrayAccess, \Iterator, \Countable
 {
@@ -17,14 +19,18 @@ class Types implements \ArrayAccess, \Iterator, \Countable
 
     public function register($type, $blueprint = null)
     {
-        if (!$blueprint && $this->systemBlueprints && isset($this->systemBlueprints[$type])) {
-            $useBlueprint = $this->systemBlueprints[$type];
-        } else {
-            $useBlueprint = $blueprint;
+        if (!isset($this->items[$type])) {
+            $this->items[$type] = [];
+        } elseif (!$blueprint) {
+            return;
         }
 
-        if ($blueprint || empty($this->items[$type])) {
-            $this->items[$type] = $useBlueprint;
+        if (!$blueprint && $this->systemBlueprints) {
+            $blueprint = isset($this->systemBlueprints[$type]) ? $this->systemBlueprints[$type] : $this->systemBlueprints['default'];
+        }
+
+        if ($blueprint) {
+            array_unshift($this->items[$type], $blueprint);
         }
     }
 
@@ -34,7 +40,16 @@ class Types implements \ArrayAccess, \Iterator, \Countable
             throw new \InvalidArgumentException('First parameter must be URI');
         }
 
-        $this->items = $this->findBlueprints($uri) + $this->items;
+        if (!$this->systemBlueprints) {
+            $this->systemBlueprints = $this->findBlueprints('blueprints://pages');
+
+            // Register default by default.
+            $this->register('default');
+        }
+
+        foreach ($this->findBlueprints($uri) as $type => $blueprint) {
+            $this->register($type, $blueprint);
+        }
     }
 
     public function scanTemplates($uri)
@@ -52,13 +67,6 @@ class Types implements \ArrayAccess, \Iterator, \Countable
             'value' => 'Filename',
             'recursive' => false
         ];
-
-        if (!$this->systemBlueprints) {
-            $this->systemBlueprints = $this->findBlueprints('blueprints://pages');
-        }
-
-        // register default by default
-        $this->register('default');
 
         foreach (Folder::all($uri, $options) as $type) {
             $this->register($type);
@@ -107,6 +115,12 @@ class Types implements \ArrayAccess, \Iterator, \Countable
             'key' => 'SubPathName',
             'value' => 'PathName',
         ];
+
+        /** @var UniformResourceLocator $locator */
+        $locator = Grav::instance()['locator'];
+        if ($locator->isStream($uri)) {
+            $options['value'] = 'Url';
+        }
 
         $list = Folder::all($uri, $options);
 

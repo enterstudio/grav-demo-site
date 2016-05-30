@@ -4,7 +4,7 @@ theme: grav
 logo_text: ''
 body_classes: ''
 sidebar:
-    activate: click
+    activate: tab
     hover_delay: 100
     size: auto
 dashboard:

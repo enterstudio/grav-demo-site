@@ -639,10 +639,19 @@ class Page
     /**
      * Return the whole contentMeta array as it currently stands
      *
+     * @param null $name
      * @return mixed
      */
-    public function getContentMeta()
+    public function getContentMeta($name = null)
     {
+        if ($name) {
+            if(isset($this->content_meta[$name])) {
+                return $this->content_meta[$name];
+            } else {
+                return null;
+            }
+
+        }
         return $this->content_meta;
     }
 
@@ -1344,20 +1353,20 @@ class Page
                 if (is_array($value)) {
                     foreach ($value as $property => $prop_value) {
                         $prop_key                  = $key . ":" . $property;
-                        $this->metadata[$prop_key] = ['name' => $prop_key, 'property' => $prop_key, 'content' => htmlspecialchars($prop_value, ENT_QUOTES)];
+                        $this->metadata[$prop_key] = ['name' => $prop_key, 'property' => $prop_key, 'content' => htmlspecialchars($prop_value, ENT_QUOTES, 'UTF-8')];
                     }
                 } else {
                     // If it this is a standard meta data type
                     if ($value) {
                         if (in_array($key, $header_tag_http_equivs)) {
-                            $this->metadata[$key] = ['http_equiv' => $key, 'content' => htmlspecialchars($value, ENT_QUOTES)];
+                            $this->metadata[$key] = ['http_equiv' => $key, 'content' => htmlspecialchars($value, ENT_QUOTES, 'UTF-8')];
                         } elseif ($key == 'charset') {
-                            $this->metadata[$key] = ['charset' => htmlspecialchars($value, ENT_QUOTES)];
+                            $this->metadata[$key] = ['charset' => htmlspecialchars($value, ENT_QUOTES, 'UTF-8')];
                         } else {
                             // if it's a social metadata with separator, render as property
                             $separator    = strpos($key, ':');
                             $hasSeparator = $separator && $separator < strlen($key) - 1;
-                            $entry        = ['name' => $key, 'content' => htmlspecialchars($value, ENT_QUOTES)];
+                            $entry        = ['name' => $key, 'content' => htmlspecialchars($value, ENT_QUOTES, 'UTF-8')];
 
                             if ($hasSeparator) {
                                 $entry['property'] = $key;
@@ -1383,7 +1392,7 @@ class Page
      */
     public function slug($var = null)
     {
-        if ($var !== null) {
+        if ($var !== null && $var !== "") {
             $this->slug = $var;
             if(!preg_match('/^[a-z0-9][-a-z0-9]*$/', $this->slug)){
                 Grav::instance()['log']->notice("Invalid slug set in YAML frontmatter: " . $this->rawRoute() . " => ".  $this->slug);

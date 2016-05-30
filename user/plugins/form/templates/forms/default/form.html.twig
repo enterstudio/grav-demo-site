@@ -1,4 +1,4 @@
-{% if form.message %}<div class="alert">{{ form.message }}</div>{% endif %}
+{% if form.message %}<div class="alert notices {{ form.message_color ?: 'green' }}"><p>{{ form.message }}</p></div>{% endif %}
 {% set scope = scope ?: 'data.' %}
 {% set multipart = '' %}
 {% set method = form.method|upper|default('POST') %}
@@ -24,9 +24,7 @@
 
 {% for field in form.fields %}
     {% set value = form.value(field.name) %}
-    <div>
-        {% include "forms/fields/#{field.type}/#{field.type}.html.twig" %}
-    </div>
+        {% include "forms/fields/#{field.type}/#{field.type}.html.twig" ignore missing %}
 {% endfor %}
 
 	<div class="buttons">

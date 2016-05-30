@@ -57,4 +57,5 @@ For example, to display a clickable thumbnail which can be pressed on to view th
 
 Click on the below image to see the result:   
 ![Sample Image](sample-image.jpg?lightbox=600,400&resize=200,200)  
+
 Learn more about Grav's media capabilities in the [Media](https://learn.getgrav.org/content/media) section of the [Learn Grav](http://learn.getgrav.org/) site.  

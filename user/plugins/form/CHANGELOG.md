@@ -1,9 +1,35 @@
+# v1.3.0-beta.6
+## 05/23/2016
+
+1. [](#new)
+    * Added support for advanced blueprint functionality in forms
+    * Added site-wide form options to set Google Captcha site + secret keys [#34](https://github.com/getgrav/grav-plugin-form/pull/34)
+    * Session-based 'flash' storage of form for redirects [#48](https://github.com/getgrav/grav-plugin-form/issues/48)
+    * Added ability to **append** to file if you include a `process: save: body:` template attribute [#65](https://github.com/getgrav/grav-plugin-form/issues/65)
+1. [](#improved)
+    * Support `keyname` form format like admin forms
+    * Added backwards compatibility for Captcha field
+    * Added 'markdown-notices' style output for better errors
+    * Added `Forms::getValue()` method to retrieve values programatically
+    * Changed `datetime` form field to simply extend `text` until implemented
+    * Updated french language
+1. [](#bugfix)
+    * Refactored the files upload logic 
+    * Missing Language string
+    * Fixed errors not getting output    
+    
+# v1.3.0-beta.5
+## 05/12/2016
+
+1. [](#improved)
+    * Moved form/field.html.twig file to the default folder, to be more easily extended in themes
+
 # v1.3.0-beta.4
 ## 05/04/2016
 
 1. [](#new)
     * Added support for `prepend` and `append` field attributes for Text input
-    
+
 # v1.3.0-beta.3
 ## 05/03/2016
 
@@ -89,7 +115,7 @@
 1. [](#bugfix)
     * Fix captcha validation
     * Fix issue where Form was unsetting valid page
-        
+
 # v1.0.2
 ## 12/01/2015
 
@@ -97,7 +123,7 @@
     * Fixed merge of defaults settings
     * Support for arrays in `data.txt.twig`
     * Fixed blueprint for admin
-    
+
 # v1.0.1
 ## 12/01/2015
 

@@ -3,6 +3,7 @@ namespace Grav\Plugin;
 
 use Grav\Common\Plugin;
 use Grav\Common\Utils;
+use Grav\Common\Uri;
 use Symfony\Component\Yaml\Yaml;
 use RocketTheme\Toolbox\File\File;
 use RocketTheme\Toolbox\Event\Event;
@@ -33,6 +34,7 @@ class FormPlugin extends Plugin
     public static function getSubscribedEvents()
     {
         return [
+            'onPluginsInitialized' => ['onPluginsInitialized', 0],
             'onPageInitialized'   => ['onPageInitialized', 0],
             'onTwigTemplatePaths' => ['onTwigTemplatePaths', 0],
             'onTwigSiteVariables' => ['onTwigSiteVariables', 0],
@@ -40,11 +42,19 @@ class FormPlugin extends Plugin
         ];
     }
 
+    public function onPluginsInitialized()
+    {
+        require_once(__DIR__ . '/classes/form.php');
+        require_once(__DIR__ . '/classes/form_serializable.php');
+    }
+
     /**
      * Initialize form if the page has one. Also catches form processing if user posts the form.
      */
     public function onPageInitialized()
     {
+
+
         /** @var Page $page */
         $page = $this->grav['page'];
         if (!$page) {
@@ -55,8 +65,7 @@ class FormPlugin extends Plugin
         if (isset($header->form) && is_array($header->form)) {
             $this->active = true;
 
-            // Create form.
-            require_once(__DIR__ . '/classes/form.php');
+            // Create form
             $this->form = new Form($page);
 
             $this->enable([
@@ -108,9 +117,8 @@ class FormPlugin extends Plugin
             case 'captcha':
                 // Validate the captcha
                 $query = http_build_query([
-                    'secret'   => isset($params['recaptcha_secret']) ? $params['recaptcha_secret'] : $params['recatpcha_secret'],
-                    //Allow value with typo for BC
-                    'response' => $this->form->value('g-recaptcha-response')
+                    'secret'   => isset($params['recaptcha_secret']) ? $params['recaptcha_secret'] : isset($params['recatpcha_secret']) ? $params['recatpcha_secret'] : $this->config->get('plugins.form.recaptcha.secret_key'),
+                    'response' => $this->form->value('g-recaptcha-response', true)
                 ]);
                 $url = 'https://www.google.com/recaptcha/api/siteverify?' . $query;
                 $response = json_decode(file_get_contents($url), true);
@@ -125,6 +133,13 @@ class FormPlugin extends Plugin
                     return;
                 }
                 break;
+            case 'ip':
+                $label = isset($params['label']) ? $params['label'] : 'User IP';
+                $blueprint = $this->form->value()->blueprints();
+                $blueprint->set('form/fields/ip', ['name'=>'ip', 'label'=> $label]);
+                $this->form->setFields($blueprint->fields());
+                $this->form->setData('ip', Uri::ip());
+                break;
             case 'message':
                 $translated_string = $this->grav['language']->translate($params);
                 $vars = array(
@@ -138,6 +153,12 @@ class FormPlugin extends Plugin
                 $this->form->message = $processed_string;
                 break;
             case 'redirect':
+                $form = new FormSerializable();
+                $form->message = $this->form->message;
+                $form->message_color = $this->form->message_color;
+                $form->fields = $this->form->fields;
+                $form->data = $this->form->value();
+                $this->grav['session']->setFlashObject('form', $form);
                 $this->grav->redirect((string)$params);
                 break;
             case 'reset':
@@ -187,7 +208,8 @@ class FormPlugin extends Plugin
 
                 $locator = $this->grav['locator'];
                 $path = $locator->findResource('user://data', true);
-                $fullFileName = $path . DS . $this->form->name . DS . $filename;
+                $dir = $path . DS . $this->form->name;
+                $fullFileName = $dir. DS . $filename;
 
                 $file = File::instance($fullFileName);
 
@@ -196,26 +218,41 @@ class FormPlugin extends Plugin
                         $vars);
                     $file->save($body);
                 } elseif ($operation == 'add') {
-                    $vars = $vars['form']->value()->toArray();
+                    if (!empty($params['body'])) {
+                        // use body similar to 'create' action and append to file as a log
+                        $body = $twig->processString($params['body'], $vars);
 
-                    foreach ($form->fields as $field) {
-                        if (isset($field['process']) && isset($field['process']['ignore']) && $field['process']['ignore']) {
-                            unset($vars[$field['name']]);
+                        // create folder if it doesn't exist
+                        if (!file_exists($dir)) {
+                            mkdir($dir);
                         }
-                    }
 
-                    if (file_exists($fullFileName)) {
-                        $data = Yaml::parse($file->content());
-                        if (count($data) > 0) {
-                            array_unshift($data, $vars);
+                        // append data to existing file
+                        file_put_contents($fullFileName, $body, FILE_APPEND | LOCK_EX);
+                    } else {
+                        // serialize YAML out to file for easier parsing as data sets
+                        $vars = $vars['form']->value()->toArray();
+
+                        foreach ($form->fields as $field) {
+                            if (isset($field['process']) && isset($field['process']['ignore']) && $field['process']['ignore']) {
+                                unset($vars[$field['name']]);
+                            }
+                        }
+
+                        if (file_exists($fullFileName)) {
+                            $data = Yaml::parse($file->content());
+                            if (count($data) > 0) {
+                                array_unshift($data, $vars);
+                            } else {
+                                $data[] = $vars;
+                            }
                         } else {
                             $data[] = $vars;
                         }
-                    } else {
-                        $data[] = $vars;
+
+                        $file->save(Yaml::dump($data));
                     }
 
-                    $file->save(Yaml::dump($data));
                 }
                 break;
         }
@@ -229,7 +266,8 @@ class FormPlugin extends Plugin
     public function onFormValidationError(Event $event)
     {
         $form = $event['form'];
-        if (empty($form->message)) {
+        if (isset($event['message'])) {
+            $form->message_color = 'red';
             $form->message = $event['message'];
         }
 
@@ -264,6 +302,9 @@ class FormPlugin extends Plugin
                 'input@' => false
             ],
             'spacer'  => [
+                'input@' => false
+            ],
+            'captcha' => [
                 'input@' => false
             ]
         ];

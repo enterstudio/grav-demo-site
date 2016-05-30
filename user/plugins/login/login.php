@@ -202,7 +202,7 @@ class LoginPlugin extends Plugin
         $page = $pages->dispatch($route);
 
         if (!$page) {
-            // Only add login page if it hasn't already been defined.
+            // Only add forgot page if it hasn't already been defined.
             $page = new Page;
             $page->init(new \SplFileInfo(__DIR__ . "/pages/forgot.md"));
             $page->slug(basename($route));
@@ -317,11 +317,11 @@ class LoginPlugin extends Plugin
             } else {
                 $message = $this->grav['language']->translate('PLUGIN_LOGIN.INVALID_REQUEST');
                 $messages->add($message, 'error');
-
             }
         }
 
-        $this->grav->redirect('/');
+        $redirect_route = $this->config->get('plugins.login.user_registration.redirect_after_activation', '/');
+        $this->grav->redirect($redirect_route);
     }
 
     /**
