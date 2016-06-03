@@ -126,6 +126,7 @@ class Grav extends Container
 
         // Set the header type
         $this->header();
+
         echo $this->output;
         $debugger->render();
 
@@ -322,9 +323,8 @@ class Grav extends Container
             $success = function_exists('fastcgi_finish_request') ? @fastcgi_finish_request() : false;
 
             if (!$success) {
-                // Unfortunately without FastCGI there is no way to close the connection. We need to ask browser to
-                // close the connection for us.
-
+                // Unfortunately without FastCGI there is no way to force close the connection.
+                // We need to ask browser to close the connection for us.
                 if ($this['config']->get('system.cache.gzip')) {
                     // Flush gzhandler buffer if gzip setting was enabled.
                     ob_end_flush();
@@ -335,11 +335,11 @@ class Grav extends Container
                     header('Content-Encoding: none');
                 }
 
+
                 // Get length and close the connection.
                 header('Content-Length: ' . ob_get_length());
                 header("Connection: close");
 
-                // Finally flush the regular buffer.
                 ob_end_flush();
                 @ob_flush();
                 flush();

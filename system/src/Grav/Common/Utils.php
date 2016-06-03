@@ -380,7 +380,7 @@ abstract class Utils
 
             $pretty_offset = "UTC${offset_prefix}${offset_formatted}";
 
-            $timezone_list[$timezone] = "(${pretty_offset}) $timezone";
+            $timezone_list[$timezone] = "(${pretty_offset}) ".str_replace('_', ' ', $timezone);
         }
 
         return $timezone_list;
@@ -462,28 +462,12 @@ abstract class Utils
     }
 
     /**
-     * Get value of an array element using dot notation
+     * @deprecated Use getDotNotation() method instead
      *
-     * @param array  $array   the Array to check
-     * @param string $path    the dot notation path to check
-     * @param mixed  $default a value to be returned if $path is not found in $array
-     *
-     * @return mixed the value found
      */
     public static function resolve(array $array, $path, $default = null)
     {
-        $current = $array;
-        $p = strtok($path, '.');
-
-        while ($p !== false) {
-            if (!isset($current[$p])) {
-                return $default;
-            }
-            $current = $current[$p];
-            $p = strtok('.');
-        }
-
-        return $current;
+        return static::getDotNotation($array, $path, $default);
     }
 
     /**
@@ -651,5 +635,65 @@ abstract class Utils
         }
 
         return false;
+    }
+
+    /**
+     * Get a portion of an array (passed by reference) with dot-notation key
+     *
+     * @param $array
+     * @param $key
+     * @param null $default
+     * @return mixed
+     */
+    public static function getDotNotation($array, $key, $default = null)
+    {
+        if (is_null($key)) return $array;
+
+        if (isset($array[$key])) return $array[$key];
+
+        foreach (explode('.', $key) as $segment)
+        {
+            if ( ! is_array($array) ||
+                ! array_key_exists($segment, $array))
+            {
+                return $default;
+            }
+
+            $array = $array[$segment];
+        }
+
+        return $array;
+    }
+
+    /**
+     * Set portion of array (passed by reference) for a dot-notation key
+     * and set the value
+     *
+     * @param $array
+     * @param $key
+     * @param $value
+     * @return mixed
+     */
+    public static function setDotNotation(&$array, $key, $value)
+    {
+        if (is_null($key)) return $array = $value;
+
+        $keys = explode('.', $key);
+
+        while (count($keys) > 1)
+        {
+            $key = array_shift($keys);
+
+            if ( ! isset($array[$key]) || ! is_array($array[$key]))
+            {
+                $array[$key] = array();
+            }
+
+            $array =& $array[$key];
+        }
+
+        $array[array_shift($keys)] = $value;
+
+        return $array;
     }
 }

@@ -5,7 +5,6 @@ use Closure;
 use Exception;
 use FilesystemIterator;
 use Grav\Common\Config\Config;
-use Grav\Common\Grav;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use RegexIterator;
@@ -730,8 +729,9 @@ class Assets
         // Concatenate files
         $buffer = $this->gatherLinks($temp_css, CSS_ASSET);
         if ($css_minify) {
-            $min = new \CSSmin();
-            $buffer = $min->run($buffer);
+            $minifier = new \MatthiasMullie\Minify\CSS();
+            $minifier->add($buffer);
+            $buffer = $minifier->minify();
         }
 
         // Write file
@@ -804,7 +804,9 @@ class Assets
         // Concatenate files
         $buffer = $this->gatherLinks($temp_js, JS_ASSET);
         if ($this->js_minify) {
-            $buffer = \JSMin::minify($buffer);
+            $minifier = new \MatthiasMullie\Minify\JS();
+            $minifier->add($buffer);
+            $buffer = $minifier->minify();
         }
 
         // Write file

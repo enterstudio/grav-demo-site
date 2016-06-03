@@ -1,3 +1,23 @@
+# v1.1.0-rc.1
+## 06/01/2016
+
+1. [](#new)
+    * Added `Utils::getDotNotation()` and `Utils::setDotNotation()` methods + tests
+    * Added support for `xx-XX` locale language lookups in `LanguageCodes` class [#854](https://github.com/getgrav/grav/issues/854)
+    * New CSS/JS Minify library that does a more reliable job [#864](https://github.com/getgrav/grav/issues/864)
+1. [](#improved)
+    * GPM installation of plugins and themes into correct multisite folders [#841](https://github.com/getgrav/grav/issues/841)
+    * Use `Page::rawRoute()` in blueprints for more reliable mulit-language support
+1. [](#bugfix)
+    * Fixes for `zlib.output_compression` as well as `mod_deflate` GZIP compression
+    * Fix for corner-case redirect logic causing infinite loops and out-of-memory errors
+    * Fix for saving fields in expert mode that have no `Validation::typeX()` methods [#626](https://github.com/getgrav/grav-plugin-admin/issues/626)
+    * Detect if user really meant to extend parent blueprint, not another one (fixes old page type blueprints)
+    * Fixed a bug in `Page::relativePagePath()` when `Page::$name` is not defined
+    * Fix for poor handling of params + query element in `Uri::processParams()` [#859](https://github.com/getgrav/grav/issues/859)
+    * Fix for double encoding in markdown links [#860](https://github.com/getgrav/grav/issues/860)
+    * Correctly handle language strings to determine if it's in admin or not [#627](https://github.com/getgrav/grav-plugin-admin/issues/627)
+
 # v1.1.0-beta.5
 ## 05/23/2016
 
