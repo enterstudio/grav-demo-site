@@ -1,3 +1,44 @@
+# v1.1.0-rc.2
+## 06/02/2016
+
+1. [](#improved)
+    * Cleaned up the Page Preview CSS to make it more 'standard' [#634](https://github.com/getgrav/grav-plugin-admin/issues/634)
+    * Added a legend with the Page colors explained [#637](https://github.com/getgrav/grav-plugin-admin/issues/637)
+    * Hide email output when sending forgot password instructions [#571](https://github.com/getgrav/grav-plugin-admin/issues/571)
+1. [](#bugfix)
+    * Fixed "Data type `System` doesn't exist!" error when activating a theme [#635](https://github.com/getgrav/grav-plugin-admin/issues/635)
+    * Fixed issue with custom media types not deleting on save [#633](https://github.com/getgrav/grav-plugin-admin/issues/633)
+    * Fixed issue when saving `List` field type in plugins + pages
+    * Fixed JS error on login/logout page due to jQuery not being loaded
+
+
+# v1.1.0-rc.1
+## 06/01/2016
+
+1. [](#new)
+    * Major improvements with the **File Upload** (`file`) field type.  Now fully supports themes, plugins, configuration + pages
+1. [](#improved)
+    * Updated with latest languages via [Crowdin](https://crowdin.com/project/grav-admin/)
+    * Provide security options for single tabs [#615](https://github.com/getgrav/grav-plugin-admin/issues/615)
+    * Disable double clicking on Save/Delete/Copy page actions [#611](https://github.com/getgrav/grav-plugin-admin/issues/611)
+    * Tweaked the avatar alignment in sidebar [#592](https://github.com/getgrav/grav-plugin-admin/issues/592)
+    * Added page name to delete dialog [#511](https://github.com/getgrav/grav-plugin-admin/issues/511)
+    * Enabling / Disabling a Plugin doesn't trigger the expand / collapse details anymore [#614](https://github.com/getgrav/grav-plugin-admin/issues/614)
+    * Added hover on plugins list rows to match pages [#619](https://github.com/getgrav/grav-plugin-admin/issues/619)
+    * Translate media configuration [#608](https://github.com/getgrav/grav-plugin-admin/issues/608)
+    * Use raw routes in blueprints to better support multi-language [#798](https://github.com/getgrav/grav-plugin-admin/issues/798)
+    * Updated NPM modules dependencies
+1. [](#bugfix)
+    * Fix double "Removed successfully" appearing when removing a package [#609](https://github.com/getgrav/grav-plugin-admin/issues/609)
+    * Prevent removing required plugins dependencies when removing a package [#613](https://github.com/getgrav/grav-plugin-admin/issues/613)
+    * Show page title in Delete Confirmation modal if this information is available
+    * Don't try to uninstall admin/form/login/email plugins
+    * Only check for updates if not `admin.maintenance` or `admin.super` [#557](https://github.com/getgrav/grav-plugin-admin/issues/557)
+    * Always submit checkboxes that are not checked and force a 0 value [#616](https://github.com/getgrav/grav-plugin-admin/issues/616)
+    * Fix encoding in tooltips again [#622](https://github.com/getgrav/grav-plugin-admin/issues/622)
+    * Do not show `move` cursor for Collections that aren't sortable [#624](https://github.com/getgrav/grav-plugin-admin/issues/624)
+    * Properly handle Collections that specify a custom key, rather than falling back to indexed list [#632](https://github.com/getgrav/grav-plugin-admin/issues/632)
+
 # v1.1.0-beta.5
 ## 05/23/2016
 
@@ -13,7 +54,6 @@
     * Fixed editor tooltips in fullscreen mode and tablet devices rendering [#566](https://github.com/getgrav/grav-plugin-admin/issues/566)
     * Fixed issue with `file` form field not functioning [#838](https://github.com/getgrav/grav/issues/838)
     * Fixed issue with creating pages [#595](https://github.com/getgrav/grav-plugin-admin/issues/595)
-
 
 # v1.1.0-beta.4
 ## 05/09/2016
