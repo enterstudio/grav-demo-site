@@ -1,6 +1,6 @@
 ---
 title: Blog
-published: true
+published: false
 body_classes: 'header-image fullwidth'
 process:
     markdown: true
