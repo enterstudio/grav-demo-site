@@ -1,11 +1,13 @@
 ---
 title: Home
+process:
+    twig: false
 ---
 
 # Grav is Running!
 ## You have installed **Grav** successfully
 
-Congratulations! You have installed the **Grav Workshop Demo Site** that provides a **simple page** and the default **Antimatter** theme to get you started.
+Congratulations! You have installed the **Grav Demo Site** that provides a **simple page** and the default **Antimatter** theme to get you started.
 
 >>> If you want a more **full-featured** base install, you should check out other [**Skeleton** packages available for download](http://getgrav.org/downloads).
 
