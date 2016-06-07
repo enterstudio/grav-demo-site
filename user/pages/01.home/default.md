@@ -1,5 +1,8 @@
 ---
 title: Home
+process:
+    markdown: true
+    twig: false
 ---
 
 # Grav is Running!
@@ -59,3 +62,26 @@ Click on the below image to see the result:
 ![Sample Image](sample-image.jpg?lightbox=600,400&resize=200,200)  
 
 Learn more about Grav's media capabilities in the [Media](https://learn.getgrav.org/content/media) section of the [Learn Grav](http://learn.getgrav.org/) site.  
+
+### Shortcodes
+
+Just like WordPress, Grav can also support shortcodes - short bits of code that can be included in your Markdown to provide additional elements within your content.
+
+Here is an example of the Tabs element, using the Shortcode UI plugin:
+
+[ui-tabs position="top-left" active="0"]
+[ui-tab title="First Tab"]
+
+This is the content of the **first** tab panel.
+
+[/ui-tab]
+[ui-tab title="Second Tab"]
+
+This is some different content for the **second** tab panel.
+
+[/ui-tab]
+[/ui-tabs]
+
+View this Markdown of this page to see what the Shortcodes UI markup looks like!
+
+
